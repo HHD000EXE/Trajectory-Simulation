@@ -4,28 +4,28 @@ DefaultGait = {[1,2],[4,3]}; % alternating [leftind,rightind]. for bound: ([LF, 
 Gait = 'pace';
 %% Initial parameters setup
 StepNum = 30; %total number of steps being simulated
-HalfBodyLength = 0.7; %1/10 in
-HalfBodyWidth = 0.5; %1/10 in
+HalfBodyLength = 0.7; %Unit 10 inches
+HalfBodyWidth = 0.5; %Unit 10 inches
 HalfBodyDiag = sqrt(HalfBodyLength^2+HalfBodyWidth^2);
 beta_rad = atan(HalfBodyWidth/HalfBodyLength); % robot aspect ratio angle (radians)
 Theta_k = 45; %degree, positive is clockwise %20; %10; %0; %70;
-X_k = -0.5*100/2.54/10; %%1/10 in %-0.5*100/2.54/10; %-0.7*100/2.54/10; %-0.7*100/2.54/10; %-0.9*100/2.54/10;
-StepLengthlist = 0.28*100/2.54/10; %1/10 in;  %0.15*100/2.54/10; %0.15*100/2.54/10; %0.13*100/2.54/10; %0.28*100/2.54/10;
+X_k = -0.5*100/2.54/10; %Unit 10 inches %initial position
+StepLengthlist = 0.28*100/2.54/10; %Unit 10 inches
 
-LogNum = 40;
-LogDiameter = 0.45;%0.45; %1/10 in
-LogSpacing = 0.45; %1/10 in   %EXPERIMENT: 0.25; %0.35; %0.45; %0.65;
+LogNum = 40;%Simulation step number
+LogDiameter = 0.45;%Obstacle diameter
+LogSpacing = 0.45; %Space between obstacles
 
-resolution = 5;
-Theta_k_minus = zeros(90/resolution+1,StepNum);
-Theta_k_plus = zeros(90/resolution+1,StepNum);
-X_k_minus = zeros(90/resolution+1,StepNum);
-X_k_plus = zeros(90/resolution+1,StepNum);
-X_lateral = zeros(90/resolution+1,StepNum);
-S_L = zeros(90/resolution+1,StepNum);
-S_R = zeros(90/resolution+1,StepNum);
-avr_angel = zeros(90/resolution+1,StepNum);
-steady_state = zeros(90/resolution+1,StepNum);
+resolution = 1;%resolution for initial angle
+Theta_k_minus = zeros(90/resolution+1,StepNum);%array to reccord robot's angle before contact with obstacle
+Theta_k_plus = zeros(90/resolution+1,StepNum);%array to reccord robot's angle after contact with obstacle
+X_k_minus = zeros(90/resolution+1,StepNum);%array to reccord robot's CoM position at fore-aft direction before contact with obstacle
+X_k_plus = zeros(90/resolution+1,StepNum);%array to reccord robot's CoM position at fore-aft direction after contact with obstacle
+X_lateral = zeros(90/resolution+1,StepNum);%array to reccord robot's CoM position at horizontal direction after contact with obstacle
+S_L = zeros(90/resolution+1,StepNum);%slide distance for one active leg
+S_R = zeros(90/resolution+1,StepNum);%slide distance for another active leg
+avr_angel = zeros(90/resolution+1,StepNum);%average robot's angle in one simulation with certain initial angle and certain initial position
+steady_state = zeros(90/resolution+1,StepNum);%array to recorrd whether in a single simulation robot has reach the steady states or not
 
 
 
@@ -33,7 +33,11 @@ steady_state = zeros(90/resolution+1,StepNum);
 %X_k_minus(1,1) = X_k;
 % Theta_k_minus(1,1) = Theta_k/180*pi;
 %X_lateral(1,1) = 8;
-hhd = 0;
+hhd = 0;%array flag
+
+%there are three for loops inside that corresponding to three different
+%gaits(bound,pace,trot),annotate the other two when you are running
+%simulation
 for Initial_Angle = 0:resolution:90
     hhd = hhd + 1;   
     X_k_minus(hhd,1) = X_k;
@@ -73,6 +77,7 @@ end
 
 
 %% Obstacle field show
+%show the obstacle field
 [edge,slip]=ObstacleShow(LogNum,LogDiameter,LogSpacing); % initial obstacle field
 for ii=0:LogNum
     figure(1111);hold on;box on;
@@ -86,6 +91,10 @@ end
 
 
 %% Trajectory show
+%show a certain trajectory simulation, the hhd means the initial degree,
+%you can modify this parameter to show the trajectory with certain initial
+%degree you want, and also there are three loops corresponding to different
+%gait, remember to annotate others when you running simulation
 for hhd = 14
 %     for i=1:StepNum %Trajectory show for bounding start
 %         PlotPose_frame_bound(1111, 0, X_lateral(hhd,i)*10*2.54, X_k_minus(hhd,i)*10*2.54, Theta_k_minus(hhd,i), 1, HalfBodyDiag*10*2.54, beta_rad, mod(i,2));
@@ -115,6 +124,7 @@ end
 
 
 %% Angel criteria transition
+%transfer angle unit from rad to degree
 for hhd = 1:90/resolution+1
     for i=1:StepNum
         Theta_k_minus(hhd,i) = Theta_k_minus(hhd,i)/pi*180;
